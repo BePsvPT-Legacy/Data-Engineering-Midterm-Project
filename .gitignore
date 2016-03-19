@@ -1,4 +1,3 @@
 rgrep
 result
-*.o
 **/*.o
