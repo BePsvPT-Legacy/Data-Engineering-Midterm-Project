@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
 #include <ctype.h>
@@ -68,6 +69,8 @@ int main(int argc, char **argv) {
     fclose(result);
 
     free_args(&(args->q));
+
+    free(args);
 
     return 0;
 }
