@@ -55,7 +55,7 @@ struct args {
 struct args *parse_args(const int, char **);
 
 /* Free malloc. */
-void free_args(struct args *);
+void free_args(struct _query *);
 
 /* Allocate multiple dimension structures for query string. */
 void allocate_query_buffer(struct _query *, unsigned int);

@@ -11,9 +11,3 @@ char *_strdup(const char *s) {
     return p ? memcpy(p, s, len) : NULL;
 }
 
-void _free(void *p) {
-    if (NULL != p) {
-        free(p);
-    }
-}
-

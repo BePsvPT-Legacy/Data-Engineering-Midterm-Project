@@ -3,7 +3,5 @@
 
 char *_strdup(const char *);
 
-void _free(void *);
-
 #endif
 

@@ -9,7 +9,17 @@
 
 int main(int, char **);
 
-bool search(struct youtube, struct args *);
+void query_string_tolower(struct _query *);
+
+bool search(struct youtube, struct args *, double *);
+
+bool _search_single(struct youtube, struct _query *);
+
+bool _search_boolean(struct youtube, struct _query *);
+
+bool _search_multiple(struct youtube, struct _query *, double *);
+
+void _tolower(char *);
 
 #endif
 

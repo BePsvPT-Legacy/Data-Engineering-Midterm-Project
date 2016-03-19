@@ -1,0 +1,4 @@
+rgrep
+result
+*.o
+**/*.o

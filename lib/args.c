@@ -17,7 +17,8 @@ struct args *parse_args(const int argc, char **argv) {
     args->q.size = 0;
     args->q.multiple = NULL;
     args->i = false;
-    args->l[0] = args->l[1] = 0;
+    args->l[0] = 0;
+    args->l[1] = 10;
     args->r = YID;
     args->o[YID] = args->o[TITLE] = args->o[DESCRIPTION] = args->o[KEYWORD] = args->o[COUNT] = false;
     args->s = 0;
@@ -41,7 +42,7 @@ struct args *parse_args(const int argc, char **argv) {
                         } else {
                             int n = 0, m = 0;
                             
-                            short int last_pattern_type = QUERY_AND;
+                            short int last_pattern_type = QUERY_OR;
 
                             char copy[MAX_LINE];
 
@@ -166,22 +167,24 @@ struct args *parse_args(const int argc, char **argv) {
 }
 
 /* Free malloc. */
-void free_args(struct args *args) {
+void free_args(struct _query *q) {
     unsigned int i;
 
-    for (i = 0; i < args->q.size; ++i) {
-        _free(&(args->q.multiple[i]->pattern));
-        args->q.multiple[i]->pattern = NULL;
+    for (i = 0; i < q->size; ++i) {
+        free(q->multiple[i]->pattern);
+        q->multiple[i]->pattern = NULL;
 
-        _free(&(args->q.multiple[i]));
-        args->q.multiple[i] = NULL;
+        free(q->multiple[i]);
+        q->multiple[i] = NULL;
     }
 
-    _free(&(args->q.multiple));
-    args->q.multiple = NULL;
-
-    _free(&(args->q.single));
-    args->q.single = NULL;
+    if (q->size > 0) {
+        free(q->multiple);
+        q->multiple = NULL;
+    } else {
+        free(q->single);
+        q->single = NULL;
+    }
 }
 
 /* Allocate multiple dimension structures for query string. */
