@@ -1,0 +1,135 @@
+<!DOCTYPE HTML>
+<html>
+    <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta charset="UTF-8">
+        <title>Data Engineering HW1</title>
+        <link rel="stylesheet" href="http://fonts.googleapis.com/icon?family=Material+Icons">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.97.5/css/materialize.min.css">
+        <style>
+            html {
+                overflow-y: scroll;
+            }
+        </style>
+    </head>
+    <body>
+        <main class="container">
+            <br>
+
+            <div>
+                <form @submit.prevent="search()" class="col s12">
+                    <div class="row">
+                        <div class="input-field col s10">
+                            <input v-model="form.queryString" id="query-string" type="text" class="validate" required>
+                            <label for="query-string">關鍵字</label>
+                        </div>
+
+                        <div class="input-field col s2">
+                            <button class="btn waves-effect waves-light" type="submit">
+                                <i class="material-icons">search</i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col s2">
+                            <p>
+                                <input v-model="form.insensitive" type="checkbox" id="insensitive">
+                                <label for="insensitive">大小寫不分</label>
+                            </p>
+                        </div>
+
+                        <div class="col s2">
+                            <select v-model="form.size" class="browser-default" required>
+                                <option value="" disabled selected>筆數</option>
+                                <option value="5">5</option>
+                                <option value="10">10</option>
+                                <option value="15">15</option>
+                            </select>
+                        </div>
+
+                        <div class="col s2">
+                            <select v-model="form.rank" class="browser-default" required>
+                                <option value="" disabled selected>排序</option>
+                                <option value="none">None</option>
+                                <option value="title">Title</option>
+                                <option value="count">View Count</option>
+                            </select>
+                        </div>
+
+                        <!--<div class="col s2">-->
+                            <!--<select v-model="form.field" class="browser-default" multiple required>-->
+                                <!--<option value="" disabled>欄位</option>-->
+                                <!--<option value="count" selected>View Count</option>-->
+                                <!--<option value="published" selected>Published Time</option>-->
+                            <!--</select>-->
+                        <!--</div>-->
+                    </div>
+                </form>
+            </div>
+
+            <br>
+
+            <div v-if="videos.length">
+                <ul class="collapsible" data-collapsible="accordion">
+                    <li v-for="video in videos">
+                        <div class="collapsible-header">
+                            <i class="material-icons">ondemand_video</i>
+                            <span
+                                class="tooltipped"
+                                data-position="bottom"
+                                data-delay="50"
+                                data-tooltip="{{ video.content }}"
+                            >{{ video.title }}</span>
+                            <span class="grey-text right">{{ video.view }} / {{ video.published_at }}</span>
+                        </div>
+
+                        <div class="collapsible-body">
+                            <div class="video-container">
+                                <iframe
+                                    src="https://www.youtube.com/embed/{{ video.id }}"
+                                    frameborder="0"
+                                    allowfullscreen
+                                ></iframe>
+                            </div>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </main>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.2/jquery.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/1.0.18/vue.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/vue-resource/0.7.0/vue-resource.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.97.5/js/materialize.min.js"></script>
+        <script>
+            var main = new Vue({
+                el: 'main',
+
+                data: {
+                    form: {
+                        insensitive: false
+                    },
+
+                    videos: {}
+                },
+
+                watch: {
+                    videos: function () {
+                        $('.collapsible').collapsible();
+                        $('.tooltipped').tooltip();
+                    }
+                },
+
+                methods: {
+                    search: function() {
+                        var _this = this;
+
+                        this.$http.get('./search.php', this.form).then(function (response) {
+                            _this.videos = response.data;
+                        });
+                    }
+                }
+            });
+        </script>
+    </body>
+</html>
