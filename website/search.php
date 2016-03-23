@@ -9,7 +9,7 @@ if ('true' === $_GET['insensitive']) {
     $command .= ' -i';
 }
 
-$page = intval($_GET['page'] ?? 0);
+$page = max(intval($_GET['page'] ?? 0), 0);
 $page *= intval($_GET['size']);
 
 $command .= " -l {$page},{$_GET['size']}";

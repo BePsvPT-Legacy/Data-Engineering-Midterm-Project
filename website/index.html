@@ -57,20 +57,20 @@
                             </select>
                         </div>
 
-                        <!--<div class="col s2">-->
-                            <!--<select v-model="form.field" class="browser-default" multiple required>-->
-                                <!--<option value="" disabled>欄位</option>-->
-                                <!--<option value="count" selected>View Count</option>-->
-                                <!--<option value="published" selected>Published Time</option>-->
-                            <!--</select>-->
-                        <!--</div>-->
+                        <div class="col s2">
+                            <select v-model="form.field" class="browser-default" multiple required>
+                                <option value="" disabled>欄位</option>
+                                <option value="count" selected>View Count</option>
+                                <option value="published" selected>Published Time</option>
+                            </select>
+                        </div>
                     </div>
                 </form>
             </div>
 
             <br>
 
-            <div v-if="videos.length">
+            <div v-show="videos.length">
                 <ul class="collapsible" data-collapsible="accordion">
                     <li v-for="video in videos">
                         <div class="collapsible-header">
@@ -81,7 +81,7 @@
                                 data-delay="50"
                                 data-tooltip="{{ video.content }}"
                             >{{ video.title }}</span>
-                            <span class="grey-text right">{{ video.view }} / {{ video.published_at }}</span>
+                            <span class="grey-text right">{{ view_and_published(video.view, video.published_at) }}</span>
                         </div>
 
                         <div class="collapsible-body">
@@ -95,22 +95,48 @@
                         </div>
                     </li>
                 </ul>
+
+                <br>
+
+                <ul class="pagination center">
+                    <li :class="[prev]">
+                        <a @click.prevent="paginate(true)"><i class="material-icons">chevron_left</i></a>
+                    </li>
+
+                    <li>Page {{ this.form.page + 1 }}</li>
+
+                    <li :class="[next]">
+                        <a @click.prevent="paginate(false)"><i class="material-icons">chevron_right</i></a>
+                    </li>
+                </ul>
             </div>
         </main>
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.2/jquery.min.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/1.0.18/vue.min.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/vue-resource/0.7.0/vue-resource.min.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.97.5/js/materialize.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/numeral.js/1.5.3/numeral.min.js"></script>
         <script>
             var main = new Vue({
                 el: 'main',
 
                 data: {
                     form: {
-                        insensitive: false
+                        insensitive: false,
+                        page: 0
                     },
 
                     videos: {}
+                },
+
+                computed: {
+                    prev: function () {
+                        return 0 !== this.form.page ? 'waves-effect' : 'disabled';
+                    },
+
+                    next: function () {
+                        return Object.keys(this.videos).length > 0 ? 'waves-effect' : 'disabled';
+                    }
                 },
 
                 watch: {
@@ -121,12 +147,62 @@
                 },
 
                 methods: {
-                    search: function() {
+                    search: function () {
                         var _this = this;
 
                         this.$http.get('./search.php', this.form).then(function (response) {
                             _this.videos = response.data;
                         });
+                    },
+
+                    paginate: function (prev) {
+                        if (true === prev) {
+                            if (0 === this.form.page) {
+                                return;
+                            }
+
+                            --this.form.page;
+                        } else {
+                            if (Object.keys(this.videos).length > 0) {
+                                ++this.form.page;
+                            } else {
+                                return;
+                            }
+                        }
+
+                        this.search();
+                    },
+
+                    view_and_published: function (view, time) {
+                        var index = {
+                            count: this.form.field.indexOf('count'),
+                            published: this.form.field.indexOf('published')
+                        };
+
+                        view = this.num_to_human(view);
+                        time = this.time_to_readable(time);
+
+                        if (-2 === index.count + index.published) {
+                            return '';
+                        } else if (-1 === index.count) {
+                            return time;
+                        } else if (-1 === index.published) {
+                            return view;
+                        }
+
+                        return view + ' / ' + time;
+                    },
+
+                    num_to_human: function (num) {
+                        return numeral(num).format('0.0a');
+                    },
+
+                    time_to_readable: function (time) {
+                        if (time.length > 8) {
+                            return new Date(Date.parse(time)).toDateString();
+                        }
+
+                        return new Date(time.substr(0, 3), time.substr(4, 5), time.substr(6, 7)).toDateString();
                     }
                 }
             });
