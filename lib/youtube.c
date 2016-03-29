@@ -4,7 +4,7 @@
 #include "../define.h"
 #include "youtube.h"
 
-struct youtube get_record(FILE *file) {
+struct youtube get_record(FILE *file, int *buffer) {
     int len = 0;
 
     char line[MAX_LINE], *temp_p;
@@ -25,6 +25,8 @@ struct youtube get_record(FILE *file) {
         if ('\0' != line[len-1]) {
             line[len-1] = '\0';
         }
+
+        *buffer += len;
 
         if (0 == strcmp("@", line)) {
             break;

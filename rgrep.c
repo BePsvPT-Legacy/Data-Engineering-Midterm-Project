@@ -3,12 +3,15 @@
 #include <stdbool.h>
 #include <string.h>
 #include <ctype.h>
+#include <fcntl.h>
+#include <unistd.h>
 #include "rgrep.h"
 #define DATA_PATH "/home/freedom/Downloads/data/youtube_"
+#define BUFFER_SIZE 16 * 1024 * 1024
 
 int main(int argc, char **argv) {
-    int i = 0;
-    
+    int i = 0, file, offset, buffer = BUFFER_SIZE + 5;
+
     double score = 0;
 
     const char files[][128] = {
@@ -31,14 +34,32 @@ int main(int argc, char **argv) {
     for (i = 0; i < 11; ++i) {
         if (0 == args->l[1]) {
             break;
-        } else if (NULL == (source = fopen(files[i], "r"))) {
-            perror ("The following error occurred");
+        } else if (-1 == (file = open(files[i], O_RDONLY)) || NULL == (source = fopen(files[i], "r"))) {
+            perror("The following error occurred");
         }
 
-        while (true) {
-            record = get_record(source);
+        offset = 0;
 
-            if (false == record.error) {
+        while (true) {
+            if (QUERY_SINGLE == args->q.type) {
+                if (buffer >= BUFFER_SIZE) {
+                    if (-1 == (offset = boost(file, args->q.single, offset))) {
+                        break;
+                    }
+
+                    fseek(source, offset - ftell(source), SEEK_CUR);
+
+                    offset += BUFFER_SIZE;
+
+                    buffer = 0;
+                }
+            }
+
+            record = get_record(source, &buffer);
+
+            if (0 == strncmp("eof", record.uid, 3)) {
+                break;
+            } else if (false == record.error) {
                 if (search(record, args, &score)) {
                     if (args->l[0] > 0) {
                         --(args->l[0]);
@@ -47,10 +68,10 @@ int main(int argc, char **argv) {
                     }
 
                     fprintf(
-                            result, 
-                            "%s\t%s\t%s\t%s\t%d\t%d\t%d\t%s\t%f\n", 
-                            record.id, record.title, record.published, record.content, record.duration, record.favorite, record.view, record.author, score
-                           );
+                        result,
+                        "%s\t%s\t%s\t%s\t%d\t%d\t%d\t%s\t%f\n",
+                        record.id, record.title, record.published, record.content, record.duration, record.favorite, record.view, record.author, score
+                    );
 
                     --(args->l[1]);
 
@@ -61,9 +82,9 @@ int main(int argc, char **argv) {
             }
         }
 
-        if (NULL != source) {
-            fclose(source);
-        }
+        fclose(source);
+
+        close(file);
     }
 
     fclose(result);
@@ -73,6 +94,36 @@ int main(int argc, char **argv) {
     free(args);
 
     return 0;
+}
+
+int boost(int file, const char *query, int offset) {
+    int bytes;
+
+    static char buffer[BUFFER_SIZE + 1];
+
+    while (true) {
+        bytes = read(file, buffer, BUFFER_SIZE);
+
+        if (-1 == bytes) {
+            perror("The following error occurred");
+        } else if (0 == bytes) {
+            break;
+        }
+
+        buffer[BUFFER_SIZE] = '\0';
+
+        if (NULL != strstr(buffer, query)) {
+            break;
+        }
+
+        offset += bytes;
+    }
+
+    if (0 == bytes) {
+        return -1;
+    }
+
+    return offset;
 }
 
 void query_string_tolower(struct _query *q) {
@@ -153,7 +204,7 @@ bool _search_multiple(struct youtube record, struct _query *q, double *score) {
             if (NULL != strstr(record.title, q->multiple[i]->pattern)) {
                 *score += (double) strlen(record.title) / len * 10;
             }
-            
+
             if (NULL != strstr(record.content, q->multiple[i]->pattern)) {
                 *score += (double) strlen(record.content) / len;
             }

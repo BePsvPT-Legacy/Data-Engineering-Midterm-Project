@@ -9,6 +9,8 @@
 
 int main(int, char **);
 
+int boost(int, const char *, int);
+
 void query_string_tolower(struct _query *);
 
 bool search(struct youtube, struct args *, double *);

@@ -35,7 +35,7 @@ struct youtube {
     bool error;
 };
 
-struct youtube get_record(FILE *);
+struct youtube get_record(FILE *, int *);
 
 #endif
 
