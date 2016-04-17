@@ -6,7 +6,8 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include "rgrep.h"
-#define DATA_PATH "/home/freedom/Downloads/data/youtube_"
+#define DATA_PATH "./data/youtube_"
+#define DATA_NUMS 1
 #define BUFFER_SIZE 16 * 1024 * 1024
 
 int main(int argc, char **argv) {
@@ -31,7 +32,7 @@ int main(int argc, char **argv) {
         query_string_tolower(&(args->q));
     }
 
-    for (i = 0; i < 11; ++i) {
+    for (i = 0; i < DATA_NUMS; ++i) {
         if (0 == args->l[1]) {
             break;
         } else if (-1 == (file = open(files[i], O_RDONLY)) || NULL == (source = fopen(files[i], "r"))) {
@@ -99,7 +100,7 @@ int main(int argc, char **argv) {
 int boost(int file, const char *query, int offset) {
     int bytes;
 
-    static char buffer[BUFFER_SIZE + 1];
+    static char buffer[BUFFER_SIZE + 1] = {'\0'};
 
     while (true) {
         bytes = read(file, buffer, BUFFER_SIZE);
@@ -109,8 +110,6 @@ int boost(int file, const char *query, int offset) {
         } else if (0 == bytes) {
             break;
         }
-
-        buffer[BUFFER_SIZE] = '\0';
 
         if (NULL != strstr(buffer, query)) {
             break;
